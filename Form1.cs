@@ -144,57 +144,54 @@ namespace CreationDate
 			string ext = Path.GetExtension(imageFullPath);
 			ext	= ext.ToLower();
 
-            if (ext.CompareTo(".jpg") == 0 || ext.CompareTo(".png") == 0 ||
-                ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0 ||
-                ext.CompareTo(".mp4") == 0)
-            {
-                try
-                {
+			try
+			{
+				if (ext.CompareTo(".jpg") == 0 || ext.CompareTo(".png") == 0)
+				{
                     // Create an Image object from the specified file.
                     Image img = Image.FromFile(imageFullPath, true);
 
                     System.Text.ASCIIEncoding encoding = new System.Text.ASCIIEncoding();
 
-                    PropertyItem propItem = img.GetPropertyItem(0x9003/*'DateTimeOriginal' field from EXIF*/);
-					newFileName = encoding.GetString(propItem.Value, 0, propItem.Len - 1);
-				}
-				// An invalid image will throw an OutOfMemoryException 
-				// exception (for example a .mov file)
-				catch (Exception) 
-                {
-                    if (ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0 ||
-                        ext.CompareTo(".mp4") == 0 || ext.CompareTo(".png") == 0)
+					try
 					{
-						FileInfo nonImageInfo = new FileInfo(imageFullPath);
-
-                        if (new FileInfo(imageFullPath + ".modd").Exists)
-                        {
-                            newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name.Insert(8, "_"));
-                        }
-                        else if (ext.CompareTo(".mp4") == 0 || ext.CompareTo(".png") == 0)
-                        {
-                            newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name);
-                        }
-                        else
-                        {
-                            DateTime creationTime = nonImageInfo.CreationTime;
-                            newFileName = creationTime.ToString("yyyyMMdd_HHmmss");
-                        }
+						PropertyItem propItem = img.GetPropertyItem(0x9003/*'DateTimeOriginal' field from EXIF*/);
+						newFileName = encoding.GetString(propItem.Value, 0, propItem.Len - 1);
 					}
-                    else if (ext.CompareTo(".jpg") == 0)
+                    catch (Exception)
                     {
-                        newFileName = Path.GetFileNameWithoutExtension(imageFileName);
-                    }
+						newFileName = Path.GetFileNameWithoutExtension(imageFileName);
+					}
+				}
+				else if(ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0 || ext.CompareTo(".mp4") == 0)
+                {
+					FileInfo nonImageInfo = new FileInfo(imageFullPath);
+
+					if (new FileInfo(imageFullPath + ".modd").Exists)
+					{
+						newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name.Insert(8, "_"));
+					}
+					else if (ext.CompareTo(".mp4") == 0 || ext.CompareTo(".png") == 0)
+					{
+						newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name);
+					}
+					else
+					{
+						DateTime creationTime = nonImageInfo.CreationTime;
+						newFileName = creationTime.ToString("yyyyMMdd_HHmmss");
+					}
 				}
 
 				if(newFileName.Length > 0)
 				{
-                    newFileName = newFileName.Replace("-", "");
+                    newFileName = newFileName.Replace("-", "_");
                     newFileName = newFileName.Replace(".", "");
 					newFileName	= newFileName.Replace(":", "");
 					newFileName	= newFileName.Replace(" ", "_");
                     newFileName = newFileName.Replace("VID_", "");
 					newFileName = newFileName.Replace("PIX_", "");
+					newFileName = newFileName.Replace("PXL_", "");
+					newFileName = newFileName.Replace("Screenshot_", "");
 
 					m_FilesToRename.Add(imageFullPath, newFileName + ext);
 					this.Text = "Creating new name: '" + newFileName + ext + "'";
@@ -203,6 +200,10 @@ namespace CreationDate
 				newFileName = "";
 
 				m_RenameProgressBar.Increment(1);
+			}
+			catch (Exception)
+			{
+
 			}
 		}
 
@@ -249,6 +250,7 @@ namespace CreationDate
 					Application.DoEvents();
 
 					curImageInfo.CopyTo(m_CurPath + newFileName);
+					Thread.Sleep(50);
 					curImageInfo.Delete();
 					
 					m_RenameProgressBar.Increment(1);
