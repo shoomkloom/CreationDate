@@ -1,0 +1,26 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\Directory\shell\Rename to Creation Date]
+@="Rename Files to Creation Date"
+
+[HKEY_CLASSES_ROOT\Directory\shell\Rename to Creation Date\Command]
+@="\"D:\\Documents\\Oren\\CreationDate\\bin\\Release\\CreationDate.exe\" \"%1\""
+
+[HKEY_CLASSES_ROOT\ACDSee.JPG\shell\Rename to Creation Date]
+@="Rename to Creation Date"
+
+[HKEY_CLASSES_ROOT\ACDSee.JPG\shell\Rename to Creation Date\Command]
+@="\"D:\\Documents\\Oren\\CreationDate\\bin\\Release\\CreationDate.exe\" \"%1\""
+
+[HKEY_CLASSES_ROOT\ACDSee.JPEG\shell\Rename to Creation Date]
+@="Rename to Creation Date"
+
+[HKEY_CLASSES_ROOT\ACDSee.JPEG\shell\Rename to Creation Date\Command]
+@="\"D:\\Documents\\Oren\\CreationDate\\bin\\Release\\CreationDate.exe\" \"%1\""
+
+[HKEY_CLASSES_ROOT\QuickTime.mov\shell\Rename to Creation Date]
+@="Rename to Creation Date"
+
+[HKEY_CLASSES_ROOT\QuickTime.mov\shell\Rename to Creation Date\Command]
+@="\"D:\\Documents\\Oren\\CreationDate\\bin\\Release\\CreationDate.exe\" \"%1\""
+
