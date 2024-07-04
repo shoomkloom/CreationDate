@@ -23,8 +23,8 @@ namespace CreationDate
 		private Hashtable m_FilesToRename = new Hashtable();
 		private System.Windows.Forms.ProgressBar m_RenameProgressBar;
 		private ArrayList m_CommandLinePath = new ArrayList();
-		private bool m_FirstIdle = true;
 		private string m_CurPath;
+		public int mHourDiff = 0;
 
 		public Form1()
 		{
@@ -56,32 +56,33 @@ namespace CreationDate
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(Form1));
-			this.m_RenameProgressBar = new System.Windows.Forms.ProgressBar();
-			this.SuspendLayout();
-			// 
-			// m_RenameProgressBar
-			// 
-			this.m_RenameProgressBar.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.m_RenameProgressBar.Location = new System.Drawing.Point(0, 0);
-			this.m_RenameProgressBar.Name = "m_RenameProgressBar";
-			this.m_RenameProgressBar.Size = new System.Drawing.Size(426, 24);
-			this.m_RenameProgressBar.TabIndex = 0;
-			// 
-			// Form1
-			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(426, 24);
-			this.Controls.Add(this.m_RenameProgressBar);
-			this.Cursor = System.Windows.Forms.Cursors.Arrow;
-			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.MaximizeBox = false;
-			this.Name = "Form1";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "Processing...";
-			Application.Idle += new System.EventHandler(this.OnIdle);
-			this.ResumeLayout(false);
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            this.m_RenameProgressBar = new System.Windows.Forms.ProgressBar();
+            this.SuspendLayout();
+            // 
+            // m_RenameProgressBar
+            // 
+            this.m_RenameProgressBar.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.m_RenameProgressBar.Location = new System.Drawing.Point(0, 0);
+            this.m_RenameProgressBar.Name = "m_RenameProgressBar";
+            this.m_RenameProgressBar.Size = new System.Drawing.Size(426, 24);
+            this.m_RenameProgressBar.TabIndex = 0;
+            // 
+            // Form1
+            // 
+            this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
+            this.ClientSize = new System.Drawing.Size(426, 24);
+            this.Controls.Add(this.m_RenameProgressBar);
+            this.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Processing...";
+            this.TopMost = true;
+            this.Load += new System.EventHandler(this.Form1_Load);
+            this.ResumeLayout(false);
 
 		}
 		#endregion
@@ -148,25 +149,21 @@ namespace CreationDate
 			{
 				if (ext.CompareTo(".jpg") == 0 || ext.CompareTo(".png") == 0)
 				{
-                    // Create an Image object from the specified file.
-                    Image img = Image.FromFile(imageFullPath, true);
-
-                    System.Text.ASCIIEncoding encoding = new System.Text.ASCIIEncoding();
-
 					try
 					{
-						PropertyItem propItem = img.GetPropertyItem(0x9003/*'DateTimeOriginal' field from EXIF*/);
-						newFileName = encoding.GetString(propItem.Value, 0, propItem.Len - 1);
+						FileInfo imageInfo = new FileInfo(imageFullPath);
+						DateTime lastWriteTime = imageInfo.LastWriteTime;
+						lastWriteTime = lastWriteTime.AddHours(mHourDiff);
+						newFileName = lastWriteTime.ToString("yyyyMMdd_HHmmss");
 					}
                     catch (Exception)
                     {
 						newFileName = Path.GetFileNameWithoutExtension(imageFileName);
 					}
 				}
-				else if(ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0 || ext.CompareTo(".mp4") == 0)
+				else if(ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0)
                 {
 					FileInfo nonImageInfo = new FileInfo(imageFullPath);
-
 					if (new FileInfo(imageFullPath + ".modd").Exists)
 					{
 						newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name.Insert(8, "_"));
@@ -181,8 +178,15 @@ namespace CreationDate
 						newFileName = creationTime.ToString("yyyyMMdd_HHmmss");
 					}
 				}
+				else if (ext.CompareTo(".mp4") == 0)
+				{
+					FileInfo nonImageInfo = new FileInfo(imageFullPath);
+					DateTime lastWriteTime = nonImageInfo.LastWriteTime;
+					lastWriteTime = lastWriteTime.AddHours(mHourDiff);
+					newFileName = lastWriteTime.ToString("yyyyMMdd_HHmmss");
+				}
 
-				if(newFileName.Length > 0)
+				if (newFileName.Length > 0)
 				{
                     newFileName = newFileName.Replace("-", "_");
                     newFileName = newFileName.Replace(".", "");
@@ -259,11 +263,12 @@ namespace CreationDate
 			}
 		}
 
-		private void OnIdle(object sender, System.EventArgs e)
-		{
-			if(m_FirstIdle)
-            {
-				m_FirstIdle = false;
+        private void Form1_Load(object sender, EventArgs e)
+        {
+			FormWelcome formWelcome = new FormWelcome();
+			if (formWelcome.ShowDialog() == DialogResult.OK)
+			{
+				mHourDiff = formWelcome.mHourDiff;
 
 				GetCommandLinePath();
 
@@ -274,9 +279,9 @@ namespace CreationDate
 				GC.Collect();
 
 				RenameFilesInList();
-
-				this.Close();
 			}
+
+			this.Close();
 		}
-	}
+    }
 }
