@@ -8,6 +8,7 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
+using ExifLib;
 
 namespace CreationDate
 {
@@ -155,35 +156,44 @@ namespace CreationDate
 				{
 					try
 					{
-						FileInfo imageInfo = new FileInfo(imageFullPath);
-						DateTime lastWriteTime = imageInfo.LastWriteTime;
-						lastWriteTime = lastWriteTime.AddHours(mHourDiff);
-						newFileName = lastWriteTime.ToString("yyyyMMdd_HHmmss");
+						using (ExifReader reader = new ExifReader(imageFullPath))
+						{
+							// Extract the tag data using the ExifTags enumeration
+							DateTime datePictureTaken;
+							if (reader.GetTagValue<DateTime>(ExifTags.DateTimeDigitized, out datePictureTaken))
+							{
+								datePictureTaken = datePictureTaken.AddHours(mHourDiff);
+								newFileName = datePictureTaken.ToString("yyyyMMdd_HHmmss");
+							}
+						}
 					}
                     catch (Exception)
                     {
 						newFileName = Path.GetFileNameWithoutExtension(imageFileName);
 					}
 				}
-				else if(ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0)
+                /*@@
+                                else if(ext.CompareTo(".m2ts") == 0 || ext.CompareTo(".mts") == 0)
+                                {
+                                    FileInfo nonImageInfo = new FileInfo(imageFullPath);
+                                    if (new FileInfo(imageFullPath + ".modd").Exists)
+                                    {
+                                        newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name.Insert(8, "_"));
+                                    }
+                                    else if (ext.CompareTo(".mp4") == 0 || ext.CompareTo(".png") == 0)
+                                    {
+                                        newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name);
+                                    }
+                                    else
+                                    {
+                                        DateTime creationTime = nonImageInfo.CreationTime;
+                                        newFileName = creationTime.ToString("yyyyMMdd_HHmmss");
+                                    }
+                                }
+                                else if (ext.CompareTo(".mp4") == 0)
+                @@*/
+                else
                 {
-					FileInfo nonImageInfo = new FileInfo(imageFullPath);
-					if (new FileInfo(imageFullPath + ".modd").Exists)
-					{
-						newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name.Insert(8, "_"));
-					}
-					else if (ext.CompareTo(".mp4") == 0 || ext.CompareTo(".png") == 0)
-					{
-						newFileName = Path.GetFileNameWithoutExtension(nonImageInfo.Name);
-					}
-					else
-					{
-						DateTime creationTime = nonImageInfo.CreationTime;
-						newFileName = creationTime.ToString("yyyyMMdd_HHmmss");
-					}
-				}
-				else if (ext.CompareTo(".mp4") == 0)
-				{
 					FileInfo nonImageInfo = new FileInfo(imageFullPath);
 					DateTime lastWriteTime = nonImageInfo.LastWriteTime;
 					lastWriteTime = lastWriteTime.AddHours(mHourDiff);
@@ -209,7 +219,7 @@ namespace CreationDate
 
 				m_RenameProgressBar.Increment(1);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 
 			}
@@ -269,18 +279,18 @@ namespace CreationDate
 
         private void Form1_Load(object sender, EventArgs e)
         {
-			FormWelcome formWelcome = new FormWelcome();
-			if (formWelcome.ShowDialog(this) == DialogResult.OK)
-			{
-				mHourDiff = formWelcome.mHourDiff;
-			}
-
 			mTimerLoad.Start();
 		}
 
         private void mTimerLoad_Tick(object sender, EventArgs e)
         {
 			mTimerLoad.Stop();
+
+			FormWelcome formWelcome = new FormWelcome();
+			if (formWelcome.ShowDialog(this) == DialogResult.OK)
+			{
+				mHourDiff = formWelcome.mHourDiff;
+			}
 
 			GetCommandLinePath();
 
