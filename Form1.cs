@@ -15,16 +15,14 @@ namespace CreationDate
 	/// Summary description for Form1.
 	/// </summary>
 	public class Form1 : System.Windows.Forms.Form
-	{
-		/// <summary>
-		/// Required designer variable.
-		/// </summary>
-		private System.ComponentModel.Container components = null;
-		private Hashtable m_FilesToRename = new Hashtable();
+    {
+        private IContainer components;
+        private Hashtable m_FilesToRename = new Hashtable();
 		private System.Windows.Forms.ProgressBar m_RenameProgressBar;
 		private ArrayList m_CommandLinePath = new ArrayList();
 		private string m_CurPath;
-		public int mHourDiff = 0;
+        private System.Windows.Forms.Timer mTimerLoad;
+        public int mHourDiff = 0;
 
 		public Form1()
 		{
@@ -56,8 +54,10 @@ namespace CreationDate
 		/// </summary>
 		private void InitializeComponent()
 		{
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.m_RenameProgressBar = new System.Windows.Forms.ProgressBar();
+            this.mTimerLoad = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // m_RenameProgressBar
@@ -67,6 +67,10 @@ namespace CreationDate
             this.m_RenameProgressBar.Name = "m_RenameProgressBar";
             this.m_RenameProgressBar.Size = new System.Drawing.Size(426, 24);
             this.m_RenameProgressBar.TabIndex = 0;
+            // 
+            // mTimerLoad
+            // 
+            this.mTimerLoad.Tick += new System.EventHandler(this.mTimerLoad_Tick);
             // 
             // Form1
             // 
@@ -266,20 +270,27 @@ namespace CreationDate
         private void Form1_Load(object sender, EventArgs e)
         {
 			FormWelcome formWelcome = new FormWelcome();
-			if (formWelcome.ShowDialog() == DialogResult.OK)
+			if (formWelcome.ShowDialog(this) == DialogResult.OK)
 			{
 				mHourDiff = formWelcome.mHourDiff;
-
-				GetCommandLinePath();
-
-				FillRenameHashTable();
-
-				//Do a garbage collection, otherwise we cannot delete the files
-				//after we copy them to a new name.
-				GC.Collect();
-
-				RenameFilesInList();
 			}
+
+			mTimerLoad.Start();
+		}
+
+        private void mTimerLoad_Tick(object sender, EventArgs e)
+        {
+			mTimerLoad.Stop();
+
+			GetCommandLinePath();
+
+			FillRenameHashTable();
+
+			//Do a garbage collection, otherwise we cannot delete the files
+			//after we copy them to a new name.
+			//@@			GC.Collect();
+
+			RenameFilesInList();
 
 			this.Close();
 		}
