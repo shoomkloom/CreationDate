@@ -215,19 +215,18 @@ namespace CreationDate
 					string mediaCreatedRaw = folder.GetDetailsOf(item, MediaCreatedIndex);
 					string mediaCreated = new string(mediaCreatedRaw.Where(c => !char.IsControl(c) && c != '\u200E' && c != '\u200F').ToArray()).Trim();
 
+					// Filename expected: PXL_YYYYMMDD_HHMMSSmmm.TS.mp4
+					var match = System.Text.RegularExpressions.Regex.Match(
+						imageFileName,
+						@"PXL_\d{8}_\d{6}(\d{3})\.TS\.mp4",
+						System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
 					if (string.IsNullOrWhiteSpace(mediaCreated) == false)
 					{
 						DateTime.TryParse(mediaCreated, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime recordedLocalTime);
 						
 						// Get seconds from filename
 						int seconds = 0;
-
-						// Filename expected: PXL_YYYYMMDD_HHMMSSmmm.TS.mp4
-						var match = System.Text.RegularExpressions.Regex.Match(
-							imageFileName,
-							@"PXL_\d{8}_\d{6}(\d{3})\.TS\.mp4",
-							System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
 						if (match.Success)
 						{
 							// Get HHMMSS from filename
@@ -249,6 +248,25 @@ namespace CreationDate
 						);
 
 						newFileName = recordedLocalTime.ToString("yyyyMMdd_HHmmss");
+					}
+                    else
+                    {
+						if (match.Success)
+						{
+							// Get YYYYMMDD from filename
+							string datePart = imageFileName.Substring(4, 8); // YYYYMMDD
+							// Get HHMMSS from filename
+							string timePart = imageFileName.Substring(13, 6); // HHMMSS
+
+							string fullDateTime = $"{datePart}_{timePart}";
+							DateTime datePictureTaken = DateTime.ParseExact(
+								fullDateTime,
+								"yyyyMMdd_HHmmss",
+								CultureInfo.InvariantCulture
+							);
+							datePictureTaken = datePictureTaken.AddHours(mHourDiff);
+							newFileName = datePictureTaken.ToString("yyyyMMdd_HHmmss");
+						}
 					}
 				}
 				else
